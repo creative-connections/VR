@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Virtualni pacient, babylon.js 1</title>
+    <!--script src="./babylon.js"></script-->
+    <!--script src="./babylonjs.loaders.min.js"></script-->
+    <!--script src="./babylon.gui.js"></script-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.2/dat.gui.min.js"></script>
+    <script src="https://preview.babylonjs.com/ammo.js"></script>
+    <script src="https://preview.babylonjs.com/cannon.js"></script>
+    <script src="https://preview.babylonjs.com/Oimo.js"></script>
+    <script src="https://preview.babylonjs.com/earcut.min.js"></script>
+    <script src="https://preview.babylonjs.com/babylon.js"></script>
+    <script src="https://preview.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+    <script src="https://preview.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js"></script>
+    <script src="https://preview.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.min.js"></script>
+    <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+    <script src="https://preview.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
+    <script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
+    <script src="https://preview.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
+
+    <!--script src="./babylon.glTF2FileLoader.js"></script-->
+    <script src="./pep.js"></script>
+    <style>
+        html, body {
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+        button {
+            background-color: #555555; /* Green */
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+<button onclick="enterVR()" style="position:absolute;bottom:10px;left:10%">Enter VR</button>
+<button onclick="showhideskin()" style="position:absolute;bottom:10px;left:30%">Skin</button>
+<button onclick="navigate()" style="position:absolute;bottom:10px;left:50%">Navigate</button>
+<canvas id="renderCanvas" touch-action="none"></canvas> <!-- touch-action="none" for best results from PEP -->
+
+<script>
+    /*import {Patientbreathing} from './patientbreathing';
+    let pb = new Patientbreathing();
+    pb.attached();
+    */
+    var canvas = document.getElementById("renderCanvas");
+
+    var engine = null;
+    var scene = null;
+    var sceneToRender = null;
+    var createDefaultEngine = function() { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true,  disableWebGL2Support: false}); };
+    var delayCreateScene = async function () {
+      // Create a scene.
+      var scene = new BABYLON.Scene(engine);
+
+      // Create a default skybox with an environment.
+      //var hdrTexture = BABYLON.CubeTexture.CreateFromPrefilteredData("textures/environment.dds", scene);
+      //var currentSkybox = scene.createDefaultSkybox(hdrTexture, true);
+      let url1 =  "models/"; let model = "vpacient.gltf"; let model2 = "vpacientkostra.gltf";
+      let  url2 = "https://filedn.com/lHGc7w3H4jOpIe46u1nPt57/";
+        //if on local - url1 + url;
+        let localresponse = await fetch(url1+model,{method:'HEAD'});
+        let local2response = await fetch(url1+model2,{method:'HEAD'});
+        let modelurl, model2url;
+        if (localresponse.ok) modelurl = url1+model; else modelurl = url2 + model;
+        if (local2response.ok) model2url = url1+ model2; else model2url = url2 + model2;
+
+      // Append glTF model to scene.
+      BABYLON.SceneLoader.ImportMesh("",modelurl, "", scene, function (meshes) {
+        // Create a default arc rotate camera and light.
+          skin = meshes[0];
+          apron = meshes[1];
+        scene.createDefaultCameraOrLight(true, true, true);
+        //scene.activeCamera = new BABYLON.ArcRotateCamera("camera1", -Math.PI/2, 0.5, 25, new BABYLON.Vector3(0, 1, 0), scene);
+        //scene.activeCamera.attachControl(canvas, true);
+        // The default camera looks at the back of the asset.
+        // Rotate the camera by 90 degrees to the front of the asset.
+        scene.activeCamera.alpha += Math.PI/2;
+        scene.activeCamera.beta += -Math.PI/3;
+        scene.activeCamera.radius = 2;
+        //append skeleton
+      });
+        BABYLON.SceneLoader.ImportMesh("",model2url,"",scene, function (meshes) {
+            //console.log('meshes of organs:',meshes);
+            organs = meshes;
+            //hide skeleton
+            //c = scene.getNodeByID("HumanCelek")
+            //c.visibility = 0;
+        });
+
+        scene.clearColor = BABYLON.Color3.Black();
+      // GUI
+      var plane = BABYLON.Mesh.CreatePlane("plane", 2, scene);
+      //plane.parent = sphere;
+        plane.position.x = -1;
+        plane.position.y = 0.5;
+        plane.rotation.x = 0;
+        plane.rotation.y = -3.14/2;
+      var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateForMesh(plane);
+      //button to showhide skin
+      var button1 = BABYLON.GUI.Button.CreateSimpleButton("but1", "Show/Hide organs");
+        button1.width = 0.3;//"220px";
+        button1.height = 0.07;//"20px";
+        button1.color = "white";
+        button1.fontSize = 20;
+        button1.background = "gray";
+      button1.onPointerUpObservable.add(function() {
+        showhideskin();
+      });
+      advancedTexture.addControl(button1);
+
+        var panel = new BABYLON.GUI.StackPanel();
+        panel.width = "220px";
+        panel.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT;
+        panel.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_CENTER;
+        panel.background = "gray"
+        advancedTexture.addControl(panel);
+
+        var header = new BABYLON.GUI.TextBlock();
+        header.text = "Breath rate (per min): 20 ";
+        header.height = "30px";
+        header.color = "white";
+
+        panel.addControl(header);
+
+        var slider = new BABYLON.GUI.Slider();
+        slider.minimum = 3;
+        slider.maximum = 60;
+        slider.value = 20;
+        slider.height = "20px";
+        slider.width = "200px";
+        slider.onValueChangedObservable.add(function(value) {
+            header.text = "Breath rate (per min): " + value.toFixed() + " ";
+
+        });
+        panel.addControl(slider);
+        var header2 = new BABYLON.GUI.TextBlock();
+        header2.text = "Y-rotation: 0 deg";
+        header2.height = "30px";
+        header2.color = "white";
+
+        panel.addControl(header2);
+
+        var slider2 = new BABYLON.GUI.Slider();
+        slider2.minimum = 0;
+        slider2.maximum = 2 * Math.PI;
+        slider2.value = 0;
+        slider2.height = "20px";
+        slider2.width = "200px";
+        slider2.onValueChangedObservable.add(function(value) {
+            //header2.text = "Breath rate (per min): " + value.toFixed() + " ";
+            header2.text = "Y-rotation: " + (BABYLON.Tools.ToDegrees(value) | 0) + " deg";
+            rotate(value);
+
+        });
+        panel.addControl(slider2);
+      return scene;
+    };
+    window.initFunction = async function() {
+
+
+      var asyncEngineCreation = async function() {
+        try {
+          return createDefaultEngine();
+        } catch(e) {
+          console.log("the available createEngine function failed. Creating the default engine instead");
+          return createDefaultEngine();
+        }
+      }
+
+      window.engine = await asyncEngineCreation();
+      if (!engine) throw 'engine should not be null.';
+      window.scene = await delayCreateScene();};
+    initFunction().then(() => {sceneToRender = scene
+      engine.runRenderLoop(function () {
+        if (sceneToRender && sceneToRender.activeCamera) {
+          sceneToRender.render();
+        }
+      });
+    });
+
+    // Resize
+    window.addEventListener("resize", function () {
+      engine.resize();
+    });
+
+    function enterVR(){
+      const xr = navigator.xr;
+      if (xr) {
+        //do webxr stuff
+        window.scene.createDefaultXRExperienceAsync();
+        /*setTimeout(showhideskin, 10000)
+        setTimeout(showhideskin, 30000)
+        setTimeout(showhideskin, 40000)
+         */
+
+      }  else {
+        console.log('WebXR not detected');
+        alert('WebXR for virtual/augmented reality not detected');
+      }
+    }
+
+    var skinstate = 1;
+    function rotate(y){
+        if (skin) {
+            if (skin.rotationQuaternion) skin.rotationQuaternion = null;
+            skin.rotation.z = y;
+        }
+        if (apron) {
+            if (y<0.01) apron.visibility = 1; else apron.visibility = 0;
+            //make it invisible as rotation is in different position - do not work this simply
+            /*if (apron.rotationQuaternion) apron.rotationQuaternion = null;
+            apron.rotation.z = y;
+             */
+        }
+        /*let c = scene.getNodeByID("HumanCelek")
+        if (c) {
+            c.rotationQuaternion = null;
+            c.rotation.y = y;
+        }*/
+        if (organs) {
+            //hide all organs -
+            for (let organ of organs) organ.visibility = 0;
+        }
+
+        /*let a = scene.getNodeByID("Human.1")
+        a.rotation.y = 0;
+        let b = scene.getNodeByID("Trenirky")
+        b.rotation.y = 0;
+        //show skeleton
+        let c = scene.getNodeByID("HumanCelek")
+        if (c) c.rotation.y = y
+
+         */
+    }
+    function showhideskin() {
+      if (skinstate === 1) {
+        //hide skin
+        a = scene.getNodeByID("Human.1")
+        a.visibility = 0;
+        b = scene.getNodeByID("Trenirky")
+        b.visibility = 0;
+        //show skeleton
+        if (organs) {for (let organ of organs) organ.visibility = 1;}
+
+        //console.log('objects a,b,c,',a,b,c);
+        skinstate = 0;
+      }
+      else {
+        //show skin
+        a = scene.getNodeByID("Human.1")
+        a.visibility = 1;
+        b = scene.getNodeByID("Trenirky")
+        b.visibility = 1;
+        //hide skeleton
+        if (organs) for (let organ of organs) organ.visibility = 0;
+        //console.log('objects a,b,c,',a,b,c);
+        skinstate = 1;
+      }
+    }
+    var navigatestate = 0;
+    function navigate() {
+      if (navigatestate === 0) {
+        let p = new BABYLON.Vector3(-0.011,0.461,0.053)
+        scene.activeCamera.aniLockedTarget(p,1.592,0.01,0.486,60)
+        skinstate=1;
+        showhideskin();
+      }
+      else if (navigatestate === 1) {
+        let p = new BABYLON.Vector3(-0.069,0.199,-0.076);
+        scene.activeCamera.aniLockedTarget(p,1.501,0.155,0.21,60)
+      }
+      else {
+        let p = new BABYLON.Vector3(0.984,1.71,0.23)
+        scene.activeCamera.aniLockedTarget(p,0,0.523,2,60)
+        skinstate=0;
+        showhideskin();
+      }
+
+      if (navigatestate>3) navigatestate = 0; else navigatestate++;
+    }
+    BABYLON.ArcRotateCamera.prototype.spinTo = function (whichprop, targetval, speed) {
+      var ease = new BABYLON.CubicEase();
+      ease.setEasingMode(BABYLON.EasingFunction.EASINGMODE_EASEINOUT);
+      BABYLON.Animation.CreateAndStartAnimation('at4', this, whichprop, speed, 120, this[whichprop], targetval, 0, ease);
+    }
+
+    BABYLON.Camera.prototype.aniLockedTarget = function (targetPos, alpha,beta,radius, speed) {
+      if (!this.lockedTarget) {
+        console.log(this.target);
+        this.lockedTarget = this.target;
+      }
+      var ease = new BABYLON.CubicEase();
+      ease.setEasingMode(BABYLON.EasingFunction.EASINGMODE_EASEINOUT);
+      BABYLON.Animation.CreateAndStartAnimation('at5', this, 'lockedTarget', speed, 120, this.lockedTarget, targetPos, 0, ease);
+      BABYLON.Animation.CreateAndStartAnimation('at5', this, 'alpha', speed, 120, this.alpha, alpha, 0, ease);
+      BABYLON.Animation.CreateAndStartAnimation('at5', this, 'beta', speed, 120, this.beta, beta, 0, ease);
+      BABYLON.Animation.CreateAndStartAnimation('at5', this, 'radius', speed, 120, this.radius, radius, 0, ease);
+    }
+
+</script>
+</body>
+</html>
