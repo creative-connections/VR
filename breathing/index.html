@@ -50,8 +50,11 @@
 </head>
 <body>
 <button onclick="enterVR()" style="position:absolute;bottom:10px;left:10%">Enter VR</button>
+<span id="loadingskin" style="background-color: #555555;color:salmon; position:absolute;bottom:30px;left:3px">Loading skin ...</span>
+<span id="loadingorgans" style="background-color: #555555;color:salmon; position:absolute;bottom:10px;left:3px">Loading organs ...</span>
 <button onclick="showhideskin()" style="position:absolute;bottom:10px;left:30%">Skin</button>
 <button onclick="navigate()" style="position:absolute;bottom:10px;left:50%">Navigate</button>
+
 <canvas id="renderCanvas" touch-action="none"></canvas> <!-- touch-action="none" for best results from PEP -->
 
 <script>
@@ -60,10 +63,13 @@
     pb.attached();
     */
     var canvas = document.getElementById("renderCanvas");
+    var loadingskin = true;
+    var loadingorgans = true;
 
     var engine = null;
     var scene = null;
     var sceneToRender = null;
+    var skin = null; var apron = null; var organs = null;
     var createDefaultEngine = function() { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true,  disableWebGL2Support: false}); };
     var delayCreateScene = async function () {
       // Create a scene.
@@ -86,6 +92,9 @@
         // Create a default arc rotate camera and light.
           skin = meshes[0];
           apron = meshes[1];
+          skin.position = new BABYLON.Vector3(0,1,0);
+          document.getElementById('loadingskin').style.display="none";
+          //apron.position = new BABYLON.Vector3(0,1,0);
         scene.createDefaultCameraOrLight(true, true, true);
         //scene.activeCamera = new BABYLON.ArcRotateCamera("camera1", -Math.PI/2, 0.5, 25, new BABYLON.Vector3(0, 1, 0), scene);
         //scene.activeCamera.attachControl(canvas, true);
@@ -99,6 +108,14 @@
         BABYLON.SceneLoader.ImportMesh("",model2url,"",scene, function (meshes) {
             //console.log('meshes of organs:',meshes);
             organs = meshes;
+            console.log('meshes length',meshes.length);
+            document.getElementById('loadingorgans').style.display="none";
+            //console.log('meshes',meshes);
+            meshes[0].position = new BABYLON.Vector3(0, 1, 0);
+            /*for (let i=0;i++;i<meshes.length) {
+                meshes[i].position = new BABYLON.Vector3(0, 0, 0);
+            }*/
+
             //hide skeleton
             //c = scene.getNodeByID("HumanCelek")
             //c.visibility = 0;
