@@ -251,6 +251,35 @@
         s.src = url;
         document.head.appendChild(s);
 
+        //xr
+        var callSendStepEvent = function () {
+            let event = new CustomEvent('dostep');
+            document.dispatchEvent(event);
+        }
+        try {
+            const xrHelper = await WebXRExperienceHelper.CreateAsync(scene);
+            xrHelper.onStateChangedObservable.add((state) => {
+                switch (state) {
+                    case WebXRState.IN_XR:
+                    // XR is initialized and already submitted one frame
+                    case WebXRState.ENTERING_XR:
+                    // xr is being initialized, enter XR request was made
+                    {
+                        scene.registerBeforeRender(callSendStepEvent());
+                        }
+                    case WebXRState.EXITING_XR:
+                    // xr exit request was made. not yet done.
+                    {
+                        scene.unregisterBeforeRender(callSendStepEvent());
+                    }
+                    case WebXRState.NOT_IN_XR:
+                    // self explanatory - either out or not yet in XR
+                }
+        } catch (e) {
+            // no XR support
+        }
+
+
         return scene;
     };
     window.initFunction = async function() {
@@ -290,14 +319,12 @@
         setTimeout(showhideskin, 30000)
         setTimeout(showhideskin, 40000)
          */
-        scene.registerBeforeRender(function () {
-              let event = new CustomEvent('dostep');
-              document.dispatchEvent(event);
-          });
+
       }  else {
         console.log('WebXR not detected');
         alert('WebXR for virtual/augmented reality not detected');
       }
+
     }
 
     var skinstate = 1;
