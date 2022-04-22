@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>20.f Virtualni pacient, babylon.js 1</title>
+    <title>22.m Virtualni pacient, babylon.js 1</title>
     <!--script src="./babylon.js"></script-->
     <!--script src="./babylonjs.loaders.min.js"></script-->
     <!--script src="./babylon.gui.js"></script-->
@@ -19,6 +19,7 @@
     <script src="https://preview.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
     <script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
     <script src="https://preview.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
+    <!--script src="bodylight.bundle.debug.js" data-main="aurelia-bootstrapper"></script-->
 
     <!--script src="./babylon.glTF2FileLoader.js"></script-->
     <script src="./pep.js"></script>
@@ -29,6 +30,15 @@
             height: 100%;
             margin: 0;
             padding: 0;
+        }
+
+        #simulator {
+            position:absolute;
+            top:10px;
+            left:10px;
+            width: 100%;
+            height: 20%;
+            color:darkgray;
         }
 
         #renderCanvas {
@@ -49,6 +59,13 @@
     </style>
 </head>
 <body>
+
+<div id="simulator" aurelia-app="webcomponents" >
+    <bdl-markdown src="hemo43.cs.md">
+        ..loading simulator
+    </bdl-markdown>
+</div>
+
 <button onclick="enterVR()" style="position:absolute;bottom:10px;left:10%">Enter VR</button>
 <span id="loadingskin" style="background-color: #555555;color:salmon; position:absolute;bottom:30px;left:3px">Loading skin ...</span>
 <span id="loadingorgans" style="background-color: #555555;color:salmon; position:absolute;bottom:10px;left:3px">Loading organs ...</span>
@@ -181,7 +198,56 @@
 
         });
         panel.addControl(slider);
-      return scene;
+
+        //virtual screen with chartjs data
+
+        var mesh = BABYLON.MeshBuilder.CreatePlane("mesh", {
+            width: 1,
+            height: 0.5,
+            sideOrientation: BABYLON.Mesh.DOUBLESIDE
+        }, scene);
+        mesh.position = new BABYLON.Vector3(0,1,2)
+        mesh.position.x = -0.45;
+        mesh.position.y = 1.35;
+        mesh.position.z = 0.4;
+        mesh.rotation.x = 0;
+        mesh.rotation.y = -3.14/2;
+        //console.log('virtual screen',mesh)
+
+        mesh.material = new BABYLON.StandardMaterial(null, scene);
+
+        //Create dynamic texture
+        //var textureResolution = 512;
+        window.textureGround = new BABYLON.DynamicTexture("dynamic texture", {
+            width: 500,
+            height: 250
+        }, scene, false, BABYLON.Texture.NEAREST_SAMPLINGMODE);
+        window.textureContext = textureGround.getContext();
+        textureContext.fillStyle = "white";
+        textureContext.fillRect(0,0,500,250);
+
+        //do lazy init of charts
+        if (window.lazyInitChart) {
+            //console.log('lazy init chart ',window.lazyInitChart);
+            for (let obj of window.lazyInitChart) {
+                console.log('lazy init chart obj',obj)
+                const bounded = obj.initChart.bind(obj);
+                bounded();
+            }
+        }
+
+        var materialGround = new BABYLON.StandardMaterial("Mat", scene);
+        materialGround.diffuseTexture = textureGround;
+        mesh.material = materialGround;
+        textureGround.update();
+
+        //load bodylight bundle after scene
+        var url = "bodylight.bundle.js";
+        var s = document.createElement("script");
+        s.src = url;
+        document.head.appendChild(s);
+
+        return scene;
     };
     window.initFunction = async function() {
 
