@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>24.d-Virtualni pacient, babylon.js 1</title>
+    <title>25.c-Virtualni pacient, babylon.js 1</title>
     <!--script src="./babylon.js"></script-->
     <!--script src="./babylonjs.loaders.min.js"></script-->
     <!--script src="./babylon.gui.js"></script-->
@@ -79,6 +79,8 @@
     let pb = new Patientbreathing();
     pb.attached();
     */
+    const screenw = 500;
+    const screenh = 250;
     var canvas = document.getElementById("renderCanvas");
     var loadingskin = true;
     var loadingorgans = true;
@@ -184,21 +186,21 @@
         advancedTexture.addControl(panel);
 
         var header = new BABYLON.GUI.TextBlock();
-        header.text = "Breath rate (per min): 20 ";
+        header.text = "cardiac inotropy: 100%";
         header.height = "30px";
         header.color = "black";
 
         panel.addControl(header);
 
         var slider = new BABYLON.GUI.Slider();
-        slider.minimum = 3;
-        slider.maximum = 60;
-        slider.value = 20;
+        slider.minimum = 50;
+        slider.maximum = 200;
+        slider.value = 100;
         slider.height = "20px";
         slider.width = "200px";
         slider.onValueChangedObservable.add(function(value) {
-            header.text = "Breath rate (per min): " + value.toFixed() + " ";
-
+            header.text = "cardiac inotropy: " + value.toFixed() + "% ";
+            document.getElementById('idlve').value = value.toFixed();
         });
         panel.addControl(slider);
 
@@ -223,12 +225,12 @@
         //Create dynamic texture
         //var textureResolution = 512;
         window.textureGround = new BABYLON.DynamicTexture("dynamic texture", {
-            width: 500,
-            height: 250
+            width: screenw,
+            height: screenh
         }, scene, false, BABYLON.Texture.NEAREST_SAMPLINGMODE);
         window.textureContext = textureGround.getContext();
         textureContext.fillStyle = "white";
-        textureContext.fillRect(0,0,500,250);
+        textureContext.fillRect(0,0,screenw,screenh);
         var materialGround = new BABYLON.StandardMaterial("Mat", scene);
         materialGround.diffuseTexture = textureGround;
         mesh.material = materialGround;
@@ -254,12 +256,12 @@
         //Create dynamic texture
         //var textureResolution = 512;
         window.textureGround2 = new BABYLON.DynamicTexture("dynamic texture", {
-            width: 250,
-            height: 250
+            width: screenh,
+            height: screenh
         }, scene, false, BABYLON.Texture.NEAREST_SAMPLINGMODE);
         window.textureContext2 = textureGround2.getContext();
         textureContext2.fillStyle = "white";
-        textureContext2.fillRect(0,0,250,250);
+        textureContext2.fillRect(0,0,screenh,screenh);
 
         var materialGround2 = new BABYLON.StandardMaterial("Mat", scene);
         materialGround2.diffuseTexture = textureGround2;
@@ -279,6 +281,7 @@
 
 
         //load bodylight bundle after scene
+        //var url = "bodylight.bundle.debug.js";
         var url = "bodylight.bundle.js";
         var s = document.createElement("script");
         s.src = url;
