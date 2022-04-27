@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>25.c-Virtualni pacient, babylon.js 1</title>
+    <title>27.a-Virtualni pacient, babylon.js 1</title>
     <!--script src="./babylon.js"></script-->
     <!--script src="./babylonjs.loaders.min.js"></script-->
     <!--script src="./babylon.gui.js"></script-->
@@ -66,7 +66,8 @@
     </bdl-markdown>
 </div>
 
-<button onclick="enterVR()" style="position:absolute;bottom:10px;left:10%">Enter VR</button>
+<!--button onclick="enterVR()" style="position:absolute;bottom:10px;left:10%">Enter VR</button-->
+<span id="vrstatus" style="color:salmon;position:absolute;bottom:50px;left:3px">XR available</span>
 <span id="loadingskin" style="background-color: #555555;color:salmon; position:absolute;bottom:30px;left:3px">Loading skin ...</span>
 <span id="loadingorgans" style="background-color: #555555;color:salmon; position:absolute;bottom:10px;left:3px">Loading organs ...</span>
 <button onclick="showhideskin()" style="position:absolute;bottom:10px;left:30%">Skin</button>
@@ -286,7 +287,7 @@
         var s = document.createElement("script");
         s.src = url;
         document.head.appendChild(s);
-
+        enterVR();
         return scene;
     };
     window.initFunction = async function() {
@@ -355,16 +356,19 @@
                           break;
                   }
               });
+              //do not enter immediately - wait for button
               const sessionManager = await window.defaultXR.baseExperience.enterXRAsync("immersive-vr", "local-floor" /*, optionalRenderTarget */ );
           } catch (e) {
               // no XR support
               console.log('xr error',e);
+              document.getElementById('vrstatus').textContent = "XR error";
           }
 
 
       }  else {
         console.log('WebXR not detected');
-        alert('WebXR for virtual/augmented reality not detected');
+        //alert('WebXR for virtual/augmented reality not detected');
+          document.getElementById('vrstatus').textContent = "XR not detected";
       }
 
     }
