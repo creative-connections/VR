@@ -1,6 +1,7 @@
 ## Virtual and augmented reality with Bodylight.js Components.
 
 This repository contains source code of web simulator able to be viewed in virtual reality or augmented reality.
+As this application is static - it is also hosted in github pages and can be viewed at https://bodylight.physiome.cz/VR/
 
 * The visualisation in browser in desktop PC or moblile devices is realized by web standard WebGL. 
 * Babylon.JS library is used to deliver experience and basic control. 
